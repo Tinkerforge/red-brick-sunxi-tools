@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Henrik Nordstrom <henrik@henriknordstrom.net>
+ * Copyright (C) 2015 Olliver Schinagl <oliver@schinagl.nl>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,10 +14,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-     SECTIONS
-     {
-       . = 0x40007000;
-       .text : { *(.text) }
-     }
 
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+#define SCRIPT_START	0x43000000
+#define SCRIPT_SIZE	0x20000
+
+int main(int argc, char *argv[]) {
+	char *addr;
+	int fd;
+	int i;
+	int size;
+
+	fd = open("/dev/mem", O_RDONLY);
+
+	size = SCRIPT_SIZE;
+	if (argc)
+		size = atoi(argv[1]);
+
+	addr = (char *)mmap(NULL, size, PROT_READ, MAP_SHARED, fd, SCRIPT_START);
+	for (i = 0; i < SCRIPT_SIZE; i++)
+		putchar(addr[i]);
+	munmap(NULL, SCRIPT_SIZE);
+	close(fd);
+
+	return 0;
+}
